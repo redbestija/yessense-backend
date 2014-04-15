@@ -4,7 +4,7 @@
 
 # Feedback
 # example: 
-POST	/icqa/feedback							ICQA.postFeedback
+*	/icqa/feedback							ICQA.postFeedback
 
 # Add a new user 
 # example: /icqa/adduser?user=name&location=home
