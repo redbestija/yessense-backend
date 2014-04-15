@@ -1,0 +1,48 @@
+#{extends 'main.html' /}
+#{set title:'ICQA Web UI' /}
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>
+/*$(function() {
+        $('.location').hide();
+
+  $('.show_location').click(function() {
+    $(this).next().next().toggle();
+    ($(this).text() == "Show") ? $(this).text("Hide") : $(this).text("Show");
+  });
+});*/
+</script>
+<div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container-fluid">
+                      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </a>
+                      <a class="brand" href="#">ICQA Web UI</a>
+            </div>
+          </div>
+</div>
+
+<div class="span12">
+        <ul class="nav nav-tabs">
+                <li class="active"><a href="#measurements" data-toggle="tab">Measurements</a></li>
+                <li><a href="#feedback" data-toggle="tab">Feedback</a></li>
+        </ul>
+</div>
+
+<div class="span12">
+        <div class="tab-content">
+
+                <div class="tab-pane active" id="measurements">
+                        #{include 'WebUI/measurements.html' /}
+                </div>
+
+                <div class="tab-pane" id="feedback">
+                        #{include 'WebUI/feedback.html' /}
+                </div>
+
+        </div>
+</div>
+                

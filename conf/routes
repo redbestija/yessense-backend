@@ -1,0 +1,42 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Feedback
+# example: 
+POST	/icqa/feedback							ICQA.postFeedback
+
+# Add a new user 
+# example: /icqa/adduser?user=name&location=home
+*		/icqa/adduser							ICQA.addUser
+
+# Get options (previously used words in the feedback categories, eg. get a list of feelings that have been previously used)
+GET		/icqa/options/{option}					ICQA.getOptions
+
+# Get a list of all the locations
+GET		/icqa/location/all						ICQA.getAllLocations	
+# Get a certain user's home location
+GET		/icqa/location/{user}					ICQA.getLocation		
+
+# Get data for admin UI
+# for feedback
+GET		/icqa/webui/feedback					WebUI.getFeedback
+GET		/icqa/webui/users						WebUI.getUsers
+# for measurements
+GET		/icqa/webui/measurement					WebUI.getMeasurement
+GET		/icqa/webui/sensors						WebUI.getSensors
+GET		/icqa/webui/variables					WebUI.getMeasurementVariables
+
+# The main page to show the admin UI
+GET		/icqa/webui/?							WebUI.index
+
+
+
+# Ignore favicon requests
+GET     /favicon.ico                            404
+
+# Map static resources from the /app/public folder to the /public path
+GET     /icqa/public/                           staticDir:public
+
+# Catch all
+#*       /{controller}/{action}                  {controller}.{action}

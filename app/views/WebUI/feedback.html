@@ -1,0 +1,99 @@
+<script type="text/javascript" >
+
+	/**
+	* Gets the feedback from the database.
+	* Note: the parameters don't do anything right now, the database doesn't process them.
+	*/
+	function getFeedback(from, to, limit) {
+		var url = "webui/feedback?";
+		
+		if (to != "")
+			url += "to="+to + "&";
+		
+		if (from != "")
+			url += "from="+from + "&";
+		
+		if (limit != "")
+			url += "limit="+limit + "&";
+		
+		$("#feedback_table tbody tr").remove();
+		
+		$.get(url,
+			function(data) {
+				console.log(data);
+				
+				for (var i = 0; i < data.feedback.length; i++) {
+					$("#feedback_table tbody").append(
+					"<tr>"+
+						"<td>" + data.feedback[i].timestamp + "</td>" +
+						"<td>" + data.feedback[i].username + "</td>" +
+						"<td>" + data.feedback[i].adj_value + "</td>" +
+						"<td>" + data.feedback[i].re_value + "</td>" +
+						"<td>" + data.feedback[i].act_value + "</td>" +
+						"<td>" + data.feedback[i].pl_value + "</td>" +
+						"<td>" + data.feedback[i].location + "</td>" +
+					"</tr>"
+					);
+				}				
+			});
+	}
+	
+	
+	$(document).ready(function() {
+		getFeedback('', '', '');
+		$("#feedback_table").tablesorter(); // doesn't work right now
+	
+	});
+ 	
+</script>
+
+<h3>Feedback</h3>
+
+<!--<div>
+From:
+<input id="from" value="${new Date(new Date().getTime() - 24*60*60*1000).format('yyyy-MM-dd HH:mm:ss')}"/>
+
+To:
+<input id="to" value="${new Date().format('yyyy-MM-dd HH:mm:ss')}">
+</div>
+
+<div>
+Sensor:
+<select id="sensor">
+	<option value="">All</option>
+</select>
+
+Variable:
+<select id="variable">
+	<option value="">All</option>
+</select>
+
+Limit:
+<select id="limit">
+	<option>10</option>
+	<option>25</option>
+	<option>50</option>
+	<option>100</option>
+	<option>500</option>
+	<option>1000</option>
+</select>
+
+<button id="query_button">Query</button>
+</div>-->
+
+<table id="feedback_table" class="table table-striped tablesorter">
+	<thead>
+		<tr>
+			<th style="width: 16%">Timestamp</th>
+			<th style="width: 14%">Username</th>
+			<th style="width: 14%">Adjective</th>
+			<th style="width: 14%">Reason</th>
+			<th style="width: 14%">Activity</th>
+			<th style="width: 14%">Planned action</th>
+			<th style="width: 14%">Location</th>
+		</tr>
+	</thead>
+	<tbody>
+
+	</tbody>
+</table>

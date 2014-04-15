@@ -1,0 +1,93 @@
+body {
+	padding-top: 60px;
+  	padding-bottom: 40px;
+}
+
+table.tablesorter thead tr .header {
+	/*background-image: url(../images/bg.gif);*/
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(../images/asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(../images/desc.gif);
+}
+
+#backlog, .channel-log, #log {
+	border-radius: 8px;
+	margin: 20px;
+	padding: 10px;
+	background: #333;
+	background: -webkit-gradient(linear, left top, left bottom, from(#666), to(#000));
+	background: -moz-linear-gradient(top,  #666,  #000);
+	background: -webkit-linear-gradient(top,  #666,  #000);
+	background: -ms-linear-gradient(top,  #666,  #000);
+	background: -o-linear-gradient(top,  #666,  #000);
+	background: linear-gradient(top,  #666,  #000);
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#666666', endColorstr='#000000');
+	height: 300px;
+	overflow: scroll;
+}
+
+#log {
+	width: 600px;
+	height: 800px;
+}
+
+.backlog-message {
+	margin-left: 15px;
+	min-height: 40px;
+	padding: 10px;
+	background: #D4D4D4;
+	-webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+	-moz-box-shadow: 0 1px 4px rgba(0,0,0,0.065);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+	border-radius: 8px;
+	position: relative;
+	margin-bottom: 5px;
+}
+
+.backlog-message b {
+	text-decoration: underline;
+}
+
+.backlog-message.pubsub {
+	background: #3A87AD;
+	color: #D4D4D4;
+}
+
+.backlog-message.delay {
+	background: #F89406;
+	color: #D4D4D4;
+}
+
+.backlog-message::before {
+	content:"";
+   	position: absolute;
+   	left: -10px;
+  	top: 20px;
+   	width: 0;
+   	height: 0;
+   	border-bottom: 10px solid transparent;
+   	border-top: 10px solid transparent;
+   	border-right: 10px solid #D4D4D4;
+}
+
+.backlog-message.pubsub::before {
+   	border-right: 10px solid #3A87AD;
+}
+
+.backlog-message.delay::before {
+   	border-right: 10px solid #F89406;
+}
+
+.profile-img {
+	height: 30px;
+	width: 30px;
+	border-radius: 4px;
+	margin-left: 5px;
+}

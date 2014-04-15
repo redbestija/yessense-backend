@@ -1,0 +1,184 @@
+<script type="text/javascript">
+	var global_meas;	// use global variable to store measurement data for chart drawing
+
+	/**
+	* Gets the measurements from the database.
+	*/
+	function getMeasurement(from, to, sensor, variable, limit) {
+		var url = "webui/measurement?";
+
+		if (to != "")
+			url += "to=" + to + "&";
+
+		if (from != "")
+			url += "from=" + from + "&";
+
+		if (sensor != "")
+			url += "sensor=" + sensor + "&";
+
+		if (variable != "")
+			url += "variable=" + variable + "&";
+
+		if (limit != "")
+			url += "limit=" + limit + "&";
+
+		$("#measurement_table tbody tr").remove();	// empty previous results from table
+
+		$.get(url, function(data) {
+			global_meas = data;
+			for ( var i = 0; i < data.measurement.length; i++) {
+				$("#measurement_table tbody").append(
+					"<tr>" + 
+						"<td>" + data.measurement[i].timestamp + "</td>" +
+						"<td>" + data.measurement[i].type + "</td>" + 
+						"<td>" + data.measurement[i].source_name + "</td>" + 
+						"<td>" + data.measurement[i].variable + "</td>" + 
+						"<td>" + data.measurement[i].unit + "</td>" + 
+						"<td>" + data.measurement[i].value + "</td>" + 
+					"</tr>");
+			}
+		});
+
+		drawChart();
+	}
+
+	/**
+	* Get a list of the available sensors in the DB.
+	*/
+	function getSensors() {
+		var url = "webui/sensors";
+
+		$.get(url, function(data) {
+			console.log(data);
+
+			var select = $("#sensor");
+
+			for ( var i = 0; i < data.sensor.length; i++) {
+				select.append($("<option />").val(data.sensor[i].id).text(data.sensor[i].type + " " + data.sensor[i].name));
+			}
+		});
+	}
+
+	/**
+	* Get a list of the variables that are in the DB.
+	*/
+	function getVariables() {
+		var url = "webui/variables";
+
+		$.get(url, function(data) {
+			console.log(data);
+
+			var select = $("#variable");
+
+			for ( var i = 0; i < data.variable.length; i++) {
+				select.append($("<option />").val(data.variable[i]).text(data.variable[i]));
+			}
+		});
+	}
+
+	/**
+	* Draw a chart with the measurement data from the latest query.
+	*/
+	function drawChart() {
+		if ($("#variable").val() == "") {	// if no variable selected, hide the chart
+			$("#chart").hide();
+			return;
+		}
+
+		var value = $("#variable option:selected").text();
+		var chart_data = new Array([ 'Time', value ]);
+
+		for ( var i = (global_meas.measurement.length - 1); i >= 0; i--) {
+			chart_data.push([ global_meas.measurement[i].timestamp, parseInt(global_meas.measurement[i].value) ]);
+		}
+
+		var data = google.visualization.arrayToDataTable(chart_data);
+
+		var sensor = $("#sensor option:selected").text();
+
+		var options = {
+			title : sensor,
+			lineWidth : 3,
+			width : 800,
+			height : 500
+		};
+
+		$("#chart").show();
+		var chart = new google.visualization.LineChart(document.getElementById('chart'));
+		chart.draw(data, options);
+	}
+
+	$(document).ready(function() {
+		getMeasurement('', '', '', '', 20);
+		$("#measurement_table").tablesorter();	// not working right now for some reason
+
+		$("#query_button").click(function() {
+			var from = $("#from").val();
+			var to = $("#to").val();
+			var sensor = $("#sensor").val();
+			var variable = $("#variable").val();
+			var limit = $("#limit").val();
+
+			getMeasurement(from, to, sensor, variable, limit);
+		});
+
+		getSensors();
+		getVariables();
+
+	});
+
+	google.load('visualization', '1.0', {'packages' : [ 'corechart' ]});
+	google.setOnLoadCallback(drawChart);
+</script>
+
+<h3>Measurements</h3>
+
+<div>
+	From: <input id="from"
+		value="${new Date(new Date().getTime() - 24*60*60*1000).format('yyyy-MM-dd HH:mm:ss')}" />
+
+	To: <input id="to" value="${new Date().format('yyyy-MM-dd HH:mm:ss')}">
+</div>
+
+<div>
+	Sensor:
+	<select id="sensor">
+		<option value="">All</option>
+	</select>
+	
+	Variable:
+	<select id="variable">
+		<option value="">All</option>
+	</select>
+	
+	Limit:
+	<select id="limit">
+		<option>10</option>
+		<option>25</option>
+		<option>50</option>
+		<option>100</option>
+		<option>500</option>
+		<option>1000</option>
+	</select>
+
+	<button id="query_button">Submit</button>
+</div>
+
+<div id="chart" style="width: 800px; height: 500px;"></div>
+
+<table id="measurement_table" class="table table-striped tablesorter">
+	<thead>
+		<tr>
+			<th style="width: 20%">Timestamp</th>
+			<th style="width: 16%">Sensor type</th>
+			<th style="width: 16%">Sensor id</th>
+			<th style="width: 16%">Variable</th>
+			<th style="width: 16%">Unit</th>
+			<th style="width: 16%">Value</th>
+		</tr>
+	</thead>
+	<tbody>
+
+	</tbody>
+</table>
+

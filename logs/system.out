@@ -1,0 +1,6 @@
+Listening for transport dt_socket at address: 8000
+13:28:17,641 INFO  ~ Starting /home/hhorstia/workspace/ICQA
+13:28:18,672 WARN  ~ You're running Play! in DEV mode
+13:28:18,951 INFO  ~ Listening for HTTP on port 9000 (Waiting a first request to start) ...
+13:28:26,620 INFO  ~ Connected to jdbc:mysql://localhost/icqa?useUnicode=yes&characterEncoding=UTF-8&connectionCollation=utf8_general_ci
+13:28:26,679 INFO  ~ Application 'ICQA' is now started !
