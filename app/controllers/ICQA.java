@@ -40,7 +40,10 @@ public class ICQA extends Controller {
 		String location = jsonMessage.get("Location").getAsString();
 		int overall = Integer.parseInt(jsonMessage.get("Overall").getAsString());
 		String when = jsonMessage.get("RelativeTime").getAsString();
-
+		
+		String wholeMessage = jsonMessage.get("WholeSentenceInText").getAsString();
+		int feedbackSource = Integer.parseInt(jsonMessage.get("FeedbackSource").getAsString());
+		
 		JsonArray activityArray = jsonMessage.get("Activity").getAsJsonArray();
 		JsonArray followingActionArray = jsonMessage.get("FollowingAction").getAsJsonArray();
 		JsonArray reasonArray = jsonMessage.get("Reason").getAsJsonArray();
@@ -75,14 +78,21 @@ public class ICQA extends Controller {
 
 			// insert the actual feedback
 			int insertExperienceId;
-			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
-					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?)";
+			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, feedback_source, is_testing_value) "
+					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?, ?, ?,0)";
+
+//			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
+//					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?)";
 			PreparedStatement insertExperience = conn.prepareStatement(queryExperience, Statement.RETURN_GENERATED_KEYS);
 			insertExperience.setString(1, user);
 
 			insertExperience.setString(2, location);
 			insertExperience.setInt(3, overall);
 			insertExperience.setString(4, when);
+
+			insertExperience.setString(5, wholeMessage);
+			insertExperience.setInt(6, feedbackSource);
+
 			insertExperience.executeUpdate();
 
 			rs = insertExperience.getGeneratedKeys();
