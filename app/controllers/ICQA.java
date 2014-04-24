@@ -241,14 +241,16 @@ public class ICQA extends Controller {
 
 	public static class QuestionAndOption{
 		String question;
+		int questionID;
 		List<Category> categories;
 
 		QuestionAndOption(){
 
 		}
 
-		QuestionAndOption(String q){
+		QuestionAndOption(int id, String q){
 			question = q; 
+			questionID = id;
 			categories = new ArrayList<Category>();
 			categories.add(new Category (-1, "Undefined"));
 		}
@@ -308,32 +310,52 @@ public class ICQA extends Controller {
 			name = n;
 		}
 	}
+
+	private static QuestionAndOption getQuestionByID(List<QuestionAndOption> questionsAndOptions, int qID, String question){
+		for (int i = 0; i < questionsAndOptions.size(); i++){
+				if (questionsAndOptions.get(i).id == qID){
+					return questionsAndOptions.get(i);
+				}
+			}
+
+			// No categories were found
+			// Create a new one
+			// Add it to the list
+			QuestionAndOption newQuestion = new QuestionAndOption(qID, question);
+			questionsAndOptions.add(newQuestion);
+			return newQuestion;
+
+		}
+
+	}
 	/**
 	 *	Get all question and corresponding options to show in the UI 
 	 */
-	static QuestionAndOption question;
 	public static void getAllQuestionsAndOptions() {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
 		// Select all questions, corresponding options and categories 
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
 		Connection conn = null;
-		question = null;
+		List<QuestionAndOption> questionsAndOptions = new ArrayList<QuestionAndOption>();
 		
+
 		try {
 			conn = DB.getConnection();
 
-			String query = "select q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
+			String query = "select q.id as QuestionID, q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
 			" from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
 			" where map.instance_id = 1 and map.question_id = q.id and map.option_id = opt.id";
 			PreparedStatement statement = conn.prepareStatement(query);
 			ResultSet rs = statement.executeQuery();
 			// Should return
-			//# QuestionText, OptionID, OptionValue, CategoryID, CategoryValue
-			//'When?', '168', 'now', NULL, NULL
-			question = new ICQA.QuestionAndOption("Question?");
+			/*
+			# QuestionID, QuestionText, OptionID, OptionValue, CategoryID, CategoryValue
+			'1', 'When?', '168', 'now', NULL, NULL 
+			*/
 			while (rs.next()) {
 				int catID  = -1;
 				String catName = "";
+				QuestionAndOption question = getQuestionByID (questionsAndOptions, rd.getInt("QuestionID"), rs.getString("QuestionText");
 				if (rs.getString("CategoryID") != null) {
 					catID = rs.getInt("CategoryID"); 
 				}
@@ -359,7 +381,7 @@ public class ICQA extends Controller {
 			}
 		}
 
-		renderJSON(question);
+		renderJSON(questionsAndOptions);
 
 		// Save as json 
 		// Send
