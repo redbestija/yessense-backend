@@ -13,6 +13,9 @@
 # Get options (previously used words in the feedback categories, eg. get a list of feelings that have been previously used)
 GET		/icqa/options/{option}					ICQA.getOptions
 
+£ Get all questions and options 
+GET 	/icqa/allquestionsandoptions 			ICQA.getAllQuestionsAndOptions
+
 # Get a list of all the locations
 GET		/icqa/location/all						ICQA.getAllLocations	
 # Get a certain user's home location

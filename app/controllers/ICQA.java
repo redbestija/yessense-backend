@@ -239,6 +239,131 @@ public class ICQA extends Controller {
 		renderText(resultText);
 	}
 
+	public class QuestionAndOption{
+		String question;
+		int catID;
+		List<Category> categories;
+
+		QuestionAndOption(){
+
+		}
+
+		QuestionAndOption(int i, String q){
+			question = q; 
+			catID = i;
+			categories = new ArrayList<Category>();
+			categories.add(new Category (-1, "Undefined"));
+		}
+
+		void addCategory(Category cat){
+			categories.add(cat);
+		}
+
+
+		Category getCategoryByID(int catID, String catName){
+			for (int i = 0; i < categories.size(), i++){
+				if (categories.get(i).id == catID){
+					return categories.get(i);
+				}
+			}
+
+			// No categories were found
+			// Create a new one
+			// Add it to the list
+			Category newCategory = new Category(catID, catName);
+			addCategory();
+			return newCategory;
+
+		}
+
+	}
+	public class Category{
+		String name; 
+		List<Option> options;
+
+		Catogory(){
+
+		}
+		Catogory(String n){
+			name = n;
+			options = new ArrayList<Option>();
+		}
+
+		void addOption(int optionID, String optionName){
+			Option option = new Option(optionID, optionName);
+			options.add(option);
+		}
+	}
+
+	public class Option{
+		int id; 
+		String name;
+		
+		Option(){
+
+		}
+
+		Option(int i, String n){
+			id = i; 
+			name = n;
+		}
+	}
+	/**
+	 *	Get all question and corresponding options to show in the UI 
+	 */
+	public static void getAllQuestionsAndOptions() {
+//	public static void getAllQuestionsAndOptions(String instanceID) {
+		// Select all questions, corresponding options and categories 
+		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
+		Connection conn = null;
+		QuestionAndOption question;
+		
+		try {
+			conn = DB.getConnection();
+
+			String query = "select q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
+			"from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
+			" where map.instance_id = 1 and map.question_id = q.id and map.option_id = opt.id ";
+			PreparedStatement statement = conn.prepareStatement(query);
+			ResultSet rs = statement.executeQuery();
+			// Should return
+			//# QuestionText, OptionID, OptionValue, CategoryID, CategoryValue
+			//'When?', '168', 'now', NULL, NULL
+			while (rs.next()) {
+				String catID  = -1;
+				String catName = "";
+				if (rs.getString("CategoryID") != null) {
+					catID = rs.getString("CategoryID"); 
+				}
+				if (rs.getString("CategoryValue") != null){
+					catName = rs.getString("CategoryValue");
+				}
+
+				Category category = question.getCategoryByID(catID, catName);
+				caregory.addOption(rs.getString("OptionID"), rs.getString("OptionValue"))
+			}
+		}
+		catch (SQLException e) {
+			renderText("Error " + e.getMessage());
+		}
+		finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				}
+				catch (SQLException e) {
+					System.out.println(time + " SQL exception while closing database connection");
+				}
+			}
+		}
+
+		renderJSON(question);
+	}
+		// Save as json 
+		// Send
+	}
+
+
 	/**
 	 *	Get options (previously used words in the feedback categories, eg. get a list of feelings that have been previously used) 
 	 */
