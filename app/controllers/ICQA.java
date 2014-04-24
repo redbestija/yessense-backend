@@ -313,7 +313,7 @@ public class ICQA extends Controller {
 
 	private static QuestionAndOption getQuestionByID(List<QuestionAndOption> questionsAndOptions, int qID, String question){
 		for (int i = 0; i < questionsAndOptions.size(); i++){
-				if (questionsAndOptions.get(i).id == qID){
+				if (questionsAndOptions.get(i).questionID == qID){
 					return questionsAndOptions.get(i);
 				}
 			}
@@ -324,8 +324,6 @@ public class ICQA extends Controller {
 			QuestionAndOption newQuestion = new QuestionAndOption(qID, question);
 			questionsAndOptions.add(newQuestion);
 			return newQuestion;
-
-		}
 
 	}
 	/**
@@ -355,7 +353,7 @@ public class ICQA extends Controller {
 			while (rs.next()) {
 				int catID  = -1;
 				String catName = "";
-				QuestionAndOption question = getQuestionByID (questionsAndOptions, rd.getInt("QuestionID"), rs.getString("QuestionText");
+				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"));
 				if (rs.getString("CategoryID") != null) {
 					catID = rs.getInt("CategoryID"); 
 				}
