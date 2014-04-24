@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.util.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -239,18 +239,16 @@ public class ICQA extends Controller {
 		renderText(resultText);
 	}
 
-	public class QuestionAndOption{
+	public static class QuestionAndOption{
 		String question;
-		int catID;
 		List<Category> categories;
 
 		QuestionAndOption(){
 
 		}
 
-		QuestionAndOption(int i, String q){
+		QuestionAndOption(String q){
 			question = q; 
-			catID = i;
 			categories = new ArrayList<Category>();
 			categories.add(new Category (-1, "Undefined"));
 		}
@@ -261,7 +259,7 @@ public class ICQA extends Controller {
 
 
 		Category getCategoryByID(int catID, String catName){
-			for (int i = 0; i < categories.size(), i++){
+			for (int i = 0; i < categories.size(); i++){
 				if (categories.get(i).id == catID){
 					return categories.get(i);
 				}
@@ -271,21 +269,23 @@ public class ICQA extends Controller {
 			// Create a new one
 			// Add it to the list
 			Category newCategory = new Category(catID, catName);
-			addCategory();
+			addCategory(newCategory);
 			return newCategory;
 
 		}
 
 	}
-	public class Category{
-		String name; 
+	public static class Category{
+		String name;
+		int id;  
 		List<Option> options;
 
-		Catogory(){
+		Category(){
 
 		}
-		Catogory(String n){
+		Category(int i, String n){
 			name = n;
+			id = i;
 			options = new ArrayList<Option>();
 		}
 
@@ -295,9 +295,9 @@ public class ICQA extends Controller {
 		}
 	}
 
-	public class Option{
-		int id; 
-		String name;
+	public static class Option{
+		public int id; 
+		public String name;
 		
 		Option(){
 
@@ -311,36 +311,38 @@ public class ICQA extends Controller {
 	/**
 	 *	Get all question and corresponding options to show in the UI 
 	 */
+	static QuestionAndOption question;
 	public static void getAllQuestionsAndOptions() {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
 		// Select all questions, corresponding options and categories 
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
 		Connection conn = null;
-		QuestionAndOption question;
+		question = null;
 		
 		try {
 			conn = DB.getConnection();
 
 			String query = "select q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
-			"from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
-			" where map.instance_id = 1 and map.question_id = q.id and map.option_id = opt.id ";
+			" from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
+			" where map.instance_id = 1 and map.question_id = q.id and map.option_id = opt.id";
 			PreparedStatement statement = conn.prepareStatement(query);
 			ResultSet rs = statement.executeQuery();
 			// Should return
 			//# QuestionText, OptionID, OptionValue, CategoryID, CategoryValue
 			//'When?', '168', 'now', NULL, NULL
+			question = new ICQA.QuestionAndOption("Question?");
 			while (rs.next()) {
-				String catID  = -1;
+				int catID  = -1;
 				String catName = "";
 				if (rs.getString("CategoryID") != null) {
-					catID = rs.getString("CategoryID"); 
+					catID = rs.getInt("CategoryID"); 
 				}
 				if (rs.getString("CategoryValue") != null){
 					catName = rs.getString("CategoryValue");
 				}
 
 				Category category = question.getCategoryByID(catID, catName);
-				caregory.addOption(rs.getString("OptionID"), rs.getString("OptionValue"))
+				category.addOption(rs.getInt("OptionID"), rs.getString("OptionValue"));
 			}
 		}
 		catch (SQLException e) {
@@ -358,7 +360,7 @@ public class ICQA extends Controller {
 		}
 
 		renderJSON(question);
-	}
+
 		// Save as json 
 		// Send
 	}
