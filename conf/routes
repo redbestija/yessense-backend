@@ -14,7 +14,7 @@
 GET		/icqa/options/{option}					ICQA.getOptions
 
 £ Get all questions and options 
-GET 	/icqa/allquestionsandoptions/{instanceID} 			ICQA.getAllQuestionsAndOptions
+GET 	/icqa/allquestionsandoptions/{json} 			ICQA.getAllQuestionsAndOptions
 
 # Get a list of all the locations
 GET		/icqa/location/all						ICQA.getAllLocations	

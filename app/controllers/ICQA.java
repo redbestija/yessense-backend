@@ -329,10 +329,10 @@ public class ICQA extends Controller {
 	/**
 	 *	Get all question and corresponding options to show in the UI 
 	 */
-	public static void getAllQuestionsAndOptions(String instanceIDString) {
+	public static void getAllQuestionsAndOptions(String json) {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
 		// Select all questions, corresponding options and categories 
-		int instanceID = Integer.parseInt(instanceIDString);
+		int instanceID = Integer.parseInt(json);
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
 		Connection conn = null;
 		List<QuestionAndOption> questionsAndOptions = new ArrayList<QuestionAndOption>();
