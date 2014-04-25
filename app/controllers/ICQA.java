@@ -329,9 +329,10 @@ public class ICQA extends Controller {
 	/**
 	 *	Get all question and corresponding options to show in the UI 
 	 */
-	public static void getAllQuestionsAndOptions() {
+	public static void getAllQuestionsAndOptions(String instanceIDString) {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
 		// Select all questions, corresponding options and categories 
+		int instanceID = Integer.parseInt(instanceIDString);
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
 		Connection conn = null;
 		List<QuestionAndOption> questionsAndOptions = new ArrayList<QuestionAndOption>();
@@ -342,8 +343,9 @@ public class ICQA extends Controller {
 
 			String query = "select q.id as QuestionID, q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
 			" from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
-			" where map.instance_id = 1 and map.question_id = q.id and map.option_id = opt.id";
+			" where map.instance_id = ? and map.question_id = q.id and map.option_id = opt.id";
 			PreparedStatement statement = conn.prepareStatement(query);
+			statement.setInt(1, instanceID);
 			ResultSet rs = statement.executeQuery();
 			// Should return
 			/*
