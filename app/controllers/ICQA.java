@@ -240,17 +240,25 @@ public class ICQA extends Controller {
 	}
 
 	public static class QuestionAndOption{
+		String title;
+		int id;
 		String question;
-		int questionID;
+		String prefix;
 		List<Category> categories;
+		boolean isRequired = false; 
+		boolean isOnlyOneSelected = false;
+		Option[] selectedOptions = new Option[0];
+		String idInHTML = ""; 
 
 		QuestionAndOption(){
 
 		}
 
-		QuestionAndOption(int id, String q){
-			question = q; 
-			questionID = id;
+		QuestionAndOption(int idtobe, String question_title, String pr){
+			title = question_title;
+			question = question_title;
+			prefix = pr; 
+			id = idtobe;
 			categories = new ArrayList<Category>();
 			categories.add(new Category (-1, "Undefined"));
 		}
@@ -262,7 +270,7 @@ public class ICQA extends Controller {
 
 		Category getCategoryByID(int catID, String catName){
 			for (int i = 0; i < categories.size(); i++){
-				if (categories.get(i).id == catID){
+				if (categories.get(i).getID() == catID){
 					return categories.get(i);
 				}
 			}
@@ -275,10 +283,17 @@ public class ICQA extends Controller {
 			return newCategory;
 
 		}
+		public String getName(){
+			return title;
+		}
+
+		public int getID(){
+			return id;
+		}
 
 	}
 	public static class Category{
-		String name;
+		String title;
 		int id;  
 		List<Option> options;
 
@@ -286,7 +301,7 @@ public class ICQA extends Controller {
 
 		}
 		Category(int i, String n){
-			name = n;
+			title = n;
 			id = i;
 			options = new ArrayList<Option>();
 		}
@@ -295,11 +310,20 @@ public class ICQA extends Controller {
 			Option option = new Option(optionID, optionName);
 			options.add(option);
 		}
+		public int getID(){
+			return id;
+		}
+
+		public String getName(){
+			return title; 
+		}
 	}
 
 	public static class Option{
-		public int id; 
-		public String name;
+		public int id;
+		int[] intensity;
+		int positiveness;
+		public String title;
 		
 		Option(){
 
@@ -307,13 +331,21 @@ public class ICQA extends Controller {
 
 		Option(int i, String n){
 			id = i; 
-			name = n;
+			title = n;
+		}
+
+		int getID(){
+			return id; 
+		}
+
+		String getName(){
+			return title;
 		}
 	}
 
 	private static QuestionAndOption getQuestionByID(List<QuestionAndOption> questionsAndOptions, int qID, String question){
 		for (int i = 0; i < questionsAndOptions.size(); i++){
-				if (questionsAndOptions.get(i).questionID == qID){
+				if (questionsAndOptions.get(i).getID() == qID){
 					return questionsAndOptions.get(i);
 				}
 			}
