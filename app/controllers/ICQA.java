@@ -353,7 +353,7 @@ public class ICQA extends Controller {
 			// No categories were found
 			// Create a new one
 			// Add it to the list
-			QuestionAndOption newQuestion = new QuestionAndOption(qID, question);
+			QuestionAndOption newQuestion = new QuestionAndOption(qID, question, "prefix");
 			questionsAndOptions.add(newQuestion);
 			return newQuestion;
 
