@@ -79,7 +79,7 @@ public class ICQA extends Controller {
 
 			// insert the actual feedback
 			int insertExperienceId;
-			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, feedback_source, is_testing_value) "
+			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, instance_id, is_testing_value) "
 					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?, ?, ?,0)";
 
 //			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
@@ -191,6 +191,207 @@ public class ICQA extends Controller {
 
 	}
 
+
+/**
+	 * A method for adding a new feedback message to the database.
+	 * 
+	 * data format: { "Experiencer":"test", "Activity":["Sitting"], "EventExperience":["Cold", "Dry", "Dark"], "FollowingAction":["Open window", "Sit down"],
+	 * "Location":"2531", "Reason":["Window is open"], "FeelingIntensity":["3", "2", "1"], "Overall":"5", "RelativeTime":"now" }
+	 * 
+	 * Known problem: if user specified doesn't actually exist in the database, causes an SQL exception
+	 */
+
+	/*
+		Message format: 
+		{ 
+		"Experiencer":"test", 
+		"Answers": [{1, ["cold", "dry", "bored"]}, ... ] 		// Array of questions and answers: {1, []},
+		"Location":"2531", 
+		"Overall":"5",  									//???
+		"WholeSentenceInText": "dfhlsdhflsdh",
+		"InstanceID": 1,
+		"IsTesting": true
+		 }
+	*/
+	public static void postFeedbackNew(String json) {
+		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
+
+		// parse JSON for the parameters
+		JsonParser parser = new JsonParser();
+		JsonObject jsonMessage = (JsonObject) parser.parse(json);
+
+		String user = jsonMessage.get("Experiencer").getAsString();
+		int intstanceID = Integer.parseInt(jsonMessage.get("InstanceID").getAsString());
+		int isTesting = Boolean.parseBoolean(jsonMessage.get("IsTesting").getAsBoolean());
+
+		String location = jsonMessage.get("Location").getAsString();
+		int overall = Integer.parseInt(jsonMessage.get("Overall").getAsString());
+		String wholeMessage = jsonMessage.get("WholeSentenceInText").getAsString();
+
+		JsonArray answers = jsonMessage.get("Answers").getAsJsonArray();
+
+
+		// when, activityArray, followingAction, reasonArray, feelingIntensityArray
+		// feelingIntensityArray
+
+		int adjectiveCategory = 4; // magic number for a category of newly added adjectives
+
+		Connection conn = null;
+
+		try {
+			conn = DB.getConnection();
+
+			// make a transaction (so all queries are executed or nothing is modified if something fails)
+			conn.setAutoCommit(false);
+
+			ResultSet rs;
+
+			// check if location exists and add if not
+			String query = "SELECT * FROM location WHERE description = ?";
+			PreparedStatement queryStatement = conn.prepareStatement(query);
+			queryStatement.setString(1, location);
+			rs = queryStatement.executeQuery();
+
+			if (!rs.isBeforeFirst()) {
+				query = "INSERT INTO location (description) VALUES (?)";
+				PreparedStatement insertStatement = conn.prepareStatement(query);
+				insertStatement.setString(1, location);
+				insertStatement.executeUpdate();
+			}
+
+			// check if user exists and add if not
+			query = "SELECT * FROM user WHERE username = ?";
+			PreparedStatement queryUserStatement = conn.prepareStatement(query);
+			queryUserStatement.setString(1, user);
+			rs = queryUserStatement.executeQuery();
+
+			if (!rs.isBeforeFirst()) {
+				query = "INSERT INTO user (username) VALUES (?)";
+				PreparedStatement insertStatement = conn.prepareStatement(query);
+				insertStatement.setString(1, location);
+				insertStatement.executeUpdate();
+			}
+
+
+			// insert the actual feedback
+			int insertExperienceId;
+			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, instance_id, is_testing_value) "
+					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, \"not in use\", ?, ?, ?)";
+
+//			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
+//					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?)";
+			PreparedStatement insertExperience = conn.prepareStatement(queryExperience, Statement.RETURN_GENERATED_KEYS);
+			insertExperience.setString(1, user);
+
+			insertExperience.setString(2, location);
+			insertExperience.setInt(3, overall);
+			// insertExperience.setString(4, when); // Not needed here; when is saved in options table
+
+			insertExperience.setString(5, wholeMessage);
+			insertExperience.setInt(6, intstanceID);
+			insertExperience.setInt(7, isTesting);
+
+			insertExperience.executeUpdate();
+
+			// question id
+			// options[] 
+			// New option ->
+			// username, question 1, instance 1
+			// show this to this user  remember which quesiton, which instance 
+			rs = insertExperience.getGeneratedKeys();
+			if (rs.next())
+				insertExperienceId = rs.getInt(1);
+			else
+				throw new SQLException();
+
+			// insert adjectives
+			int insertAdjectiveId[] = new int[feelingArray.size()];
+			for (int i = 0; i < feelingArray.size(); i++) {
+				PreparedStatement insertAdjective = conn.prepareStatement("INSERT INTO fb_adjective (category, value) VALUES (?, ?)",
+						Statement.RETURN_GENERATED_KEYS);
+				insertAdjective.setInt(1, adjectiveCategory);
+				insertAdjective.setString(2, feelingArray.get(i).getAsString());
+				insertAdjective.executeUpdate();
+
+				rs = insertAdjective.getGeneratedKeys();
+				if (rs.next())
+					insertAdjectiveId[i] = rs.getInt(1);
+				else
+					throw new SQLException();
+			}
+
+			// insert feelings
+			for (int i = 0; i < insertAdjectiveId.length; i++) {
+				PreparedStatement insertFeeling = conn.prepareStatement("INSERT INTO fb_feeling (exp_id, adjective, intensity) VALUES (?, ?, ?)");
+				insertFeeling.setInt(1, insertExperienceId);
+				insertFeeling.setInt(2, insertAdjectiveId[i]);
+				insertFeeling.setInt(3, feelingIntensityArray.get(i).getAsInt());
+				insertFeeling.executeUpdate();
+			}
+
+			// insert reasons
+			for (int i = 0; i < reasonArray.size(); i++) {
+				PreparedStatement insertReason = conn.prepareStatement("INSERT INTO fb_reason (exp_id, value) VALUES (?, ?)");
+				insertReason.setInt(1, insertExperienceId);
+				insertReason.setString(2, reasonArray.get(i).getAsString());
+				insertReason.executeUpdate();
+			}
+
+			// insert activities
+			for (int i = 0; i < activityArray.size(); i++) {
+				PreparedStatement insertActivity = conn.prepareStatement("INSERT INTO fb_activity (exp_id, value) VALUES (?, ?)");
+				insertActivity.setInt(1, insertExperienceId);
+				insertActivity.setString(2, activityArray.get(i).getAsString());
+				insertActivity.executeUpdate();
+			}
+
+			// insert planned actions
+			for (int i = 0; i < followingActionArray.size(); i++) {
+				PreparedStatement insertPlannedAction = conn.prepareStatement("INSERT INTO fb_planned_action (exp_id, value) VALUES (?, ?)");
+				insertPlannedAction.setInt(1, insertExperienceId);
+				insertPlannedAction.setString(2, followingActionArray.get(i).getAsString());
+				insertPlannedAction.executeUpdate();
+			}
+
+			conn.commit();
+
+
+			System.out.println(time + " New feedback inserted into database");
+			renderText("New feedback inserted into database");
+		}
+		catch (SQLException e) {
+			String str = "";
+			try {
+				if (conn != null) {
+					System.out.println(time + " Unable to insert new feedback into database, doing a rollback.");
+					conn.rollback();
+				}
+			}
+			catch (SQLException ex2) {
+				System.out.println(time + " SQL Exception while doing rollback: " + ex2);
+			}
+
+			while (e != null) {
+				System.out.println(time + " SQL Exception:  " + e.getMessage());
+				str += e.getMessage();
+				e = e.getNextException();
+			}
+			renderText("Error: " + str);
+		}
+		finally {
+
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(false);
+					conn.close();
+				}
+				catch (SQLException e) {
+					System.out.println(time + " SQL exception while disabling autocommit or closing database connection");
+				}
+			}
+		}
+
+	}
 
 	/**
 	 * A method for adding a new user to the database. Optionally also the user's home location can be determined.
@@ -362,7 +563,7 @@ public class ICQA extends Controller {
 
 	}
 	/**
-	 *	Get all question and corresponding options to show in the UI 
+	 *	Get all questions and corresponding options to show depending on the instance number (parameter) 
 	 */
 	public static void getAllQuestionsAndOptions(String json) {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
