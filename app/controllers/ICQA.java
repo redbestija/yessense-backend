@@ -21,6 +21,7 @@ import play.mvc.*;
  */
 public class ICQA extends Controller {
 
+
 	/**
 	 * A method for adding a new feedback message to the database.
 	 * 
@@ -152,6 +153,7 @@ public class ICQA extends Controller {
 
 			conn.commit();
 
+
 			System.out.println(time + " New feedback inserted into database");
 			renderText("New feedback inserted into database");
 		}
@@ -188,6 +190,7 @@ public class ICQA extends Controller {
 		}
 
 	}
+
 
 	/**
 	 * A method for adding a new user to the database. Optionally also the user's home location can be determined.
@@ -343,7 +346,7 @@ public class ICQA extends Controller {
 		}
 	}
 
-	private static QuestionAndOption getQuestionByID(List<QuestionAndOption> questionsAndOptions, int qID, String question){
+	private static QuestionAndOption getQuestionByID(List<QuestionAndOption> questionsAndOptions, int qID, String question, String prefix){
 		for (int i = 0; i < questionsAndOptions.size(); i++){
 				if (questionsAndOptions.get(i).getID() == qID){
 					return questionsAndOptions.get(i);
@@ -353,7 +356,7 @@ public class ICQA extends Controller {
 			// No categories were found
 			// Create a new one
 			// Add it to the list
-			QuestionAndOption newQuestion = new QuestionAndOption(qID, question, "prefix");
+			QuestionAndOption newQuestion = new QuestionAndOption(qID, question, prefix);
 			questionsAndOptions.add(newQuestion);
 			return newQuestion;
 
@@ -373,7 +376,7 @@ public class ICQA extends Controller {
 		try {
 			conn = DB.getConnection();
 
-			String query = "select q.id as QuestionID, q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
+			String query = "select q.id as QuestionID, q.question_prompt as Prefix, q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
 			" from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
 			" where map.instance_id = ? and map.question_id = q.id and map.option_id = opt.id";
 			PreparedStatement statement = conn.prepareStatement(query);
@@ -387,7 +390,7 @@ public class ICQA extends Controller {
 			while (rs.next()) {
 				int catID  = -1;
 				String catName = "";
-				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"));
+				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"), rs.getString("Prefix"));
 				if (rs.getString("CategoryID") != null) {
 					catID = rs.getInt("CategoryID"); 
 				}
