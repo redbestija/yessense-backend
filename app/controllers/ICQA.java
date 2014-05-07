@@ -210,7 +210,7 @@ public class ICQA extends Controller {
 		"Overall":"5",  									//???
 		"WholeSentenceInText": "dfhlsdhflsdh",
 		"InstanceID": 1,
-		"IsTesting": true
+		"IsTesting": 1
 		 }
 
 		Value to test: 
@@ -221,7 +221,7 @@ public class ICQA extends Controller {
 		"Overall":"5",  								
 		"WholeSentenceInText": "dfhlsdhflsdh",
 		"InstanceID": 1,
-		"IsTesting": true
+		"IsTesting": 1
 		 }
 	*/
 	public static void postFeedbackNew(String json) {
@@ -233,7 +233,7 @@ public class ICQA extends Controller {
 
 		String user = jsonMessage.get("Experiencer").getAsString();
 		int intstanceID = Integer.parseInt(jsonMessage.get("InstanceID").getAsString());
-		int isTesting = Boolean.parseBoolean(jsonMessage.get("IsTesting").getAsBoolean());
+		int isTesting = Integer.parseInt(jsonMessage.get("IsTesting").getAsString());
 
 		String location = jsonMessage.get("Location").getAsString();
 		int overall = Integer.parseInt(jsonMessage.get("Overall").getAsString());
@@ -265,7 +265,7 @@ public class ICQA extends Controller {
 			queryStatement.setString(1, location);
 			rs = queryStatement.executeQuery();
 
-			if (!rs.isBeforeFirst()) {
+			if (!rs.next()) {
 				query = "INSERT INTO location (description) VALUES (?)";
 				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 				insertStatement.setString(1, location);
@@ -275,7 +275,7 @@ public class ICQA extends Controller {
 				if (rs.next())
 					locationID = rs.getInt(1);
 				else
-					throw new SQLException();
+					throw new SQLException("Cannot insert new location into the DB");
 			}
 			else{
 				locationID = rs.getInt(1);
@@ -287,17 +287,17 @@ public class ICQA extends Controller {
 			queryUserStatement.setString(1, user);
 			rs = queryUserStatement.executeQuery();
 
-			if (!rs.isBeforeFirst()) {
+			if (!rs.next()) {
 				query = "INSERT INTO user (username) VALUES (?)";
 				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-				insertStatement.setString(1, location);
+				insertStatement.setString(1, user);
 				insertStatement.executeUpdate();
 				// Get newly added locatin ID
 				rs = insertStatement.getGeneratedKeys();
 				if (rs.next())
 					userID = rs.getInt(1);
 				else
-					throw new SQLException();
+					throw new SQLException("Cannot insert new user into the database");
 			}
 			else{
 				userID = rs.getInt(1);
@@ -318,9 +318,9 @@ public class ICQA extends Controller {
 			insertExperience.setInt(3, overall);
 			// insertExperience.setString(4, when); // Not needed here; when is saved in options table
 
-			insertExperience.setString(5, wholeMessage);
-			insertExperience.setInt(6, intstanceID);
-			insertExperience.setInt(7, isTesting);
+			insertExperience.setString(4, wholeMessage);
+			insertExperience.setInt(5, intstanceID);
+			insertExperience.setInt(6, isTesting);
 
 			insertExperience.executeUpdate();
 
@@ -329,7 +329,7 @@ public class ICQA extends Controller {
 			if (rs.next())
 				insertExperienceId = rs.getInt(1);
 			else
-				throw new SQLException();
+				throw new SQLException("Cannot insert new feedback");
 
 			// New option ->
 			// username, question 1, instance 1
@@ -346,15 +346,15 @@ public class ICQA extends Controller {
 				for (int j = 0; j < answersToAdd.size(); j++){
 					int adjID = -1; 
 					// Check if this adjective already exists
-					String queryAdjective = "SELECT * FROM options WHERE value = ?";
+					String queryAdjective = "SELECT * FROM icqa.option where value = ?";
 					PreparedStatement queryStatementAdjective = conn.prepareStatement(queryAdjective);
 					queryStatementAdjective.setString(1, answersToAdd.get(j).getAsString());
 					rs = queryStatementAdjective.executeQuery();
 
-					if (!rs.isBeforeFirst()) {
+					if (!rs.next()) {
 						// No such option (yet)
 						// Insert it
-						queryAdjective = "INSERT INTO options (value) VALUES (?)";
+						queryAdjective = "INSERT INTO icqa.option (value) VALUES (?)";
 						PreparedStatement insertStatement = conn.prepareStatement(queryAdjective, Statement.RETURN_GENERATED_KEYS);
 						insertStatement.setString(1, answersToAdd.get(j).getAsString());
 						insertStatement.executeUpdate();
@@ -363,7 +363,7 @@ public class ICQA extends Controller {
 						if (rs.next())
 							adjID = rs.getInt(1);
 						else
-							throw new SQLException();
+							throw new SQLException("Cannot insert options added by user");
 
 						// Add new option to Question-Option map so that a user would see his own option
 						queryAdjective = "INSERT INTO instance_question_option_map (question_id, option_id, user_id) VALUES (?,?,?)";
@@ -379,13 +379,12 @@ public class ICQA extends Controller {
 					}
 					
 					// Add info to the map
-					String queryAdjMap = "INSERT INTO feedback_option_map (feedback_id, question_id, option_id, instance_id) VALUES (?,?,?,?)";
-					PreparedStatement queryStatementMap = conn.prepareStatement(queryAdjective);
+					String queryAdjMap = "INSERT INTO feedback_option_map (feedback_id, question_id, option_id) VALUES (?,?,?)";
+					PreparedStatement queryStatementMap = conn.prepareStatement(queryAdjMap);
 					queryStatementMap.setInt(1, insertExperienceId);
 					queryStatementMap.setInt(2, qID);
 					queryStatementMap.setInt(3, adjID);
-					queryStatementMap.setInt(4, intstanceID);
-					rs = queryStatementMap.executeQuery();
+					queryStatementMap.executeUpdate();
 
 
 				}
@@ -399,6 +398,7 @@ public class ICQA extends Controller {
 			renderText("New feedback inserted into database");
 		}
 		catch (SQLException e) {
+			
 			String str = "";
 			try {
 				if (conn != null) {
@@ -415,7 +415,7 @@ public class ICQA extends Controller {
 				str += e.getMessage();
 				e = e.getNextException();
 			}
-			renderText("Error: " + str);
+			renderText("Error from SQL: " + str);
 		}
 		finally {
 
@@ -604,7 +604,7 @@ public class ICQA extends Controller {
 	/**
 	 *	Get all questions and corresponding options to show depending on the instance number (parameter) 
 	 */
-	public static void getAllQuestionsAndOptions(String json) {
+	public static void getAllQuestionsAndOptions(String json, String username) {
 //	public static void getAllQuestionsAndOptions(String instanceID) {
 		// Select all questions, corresponding options and categories 
 		int instanceID = Integer.parseInt(json);
@@ -618,9 +618,10 @@ public class ICQA extends Controller {
 
 			String query = "select q.id as QuestionID, q.question_prompt as Prefix, q.question_text as QuestionText, opt.id as OptionID, opt.value as OptionValue, opt.category_id as CategoryID, cat.value as CategoryValue" +
 			" from question as q, instance_question_option_map map, icqa.option as opt left join fb_adj_category as cat on (opt.category_id = cat.id)" + 
-			" where map.instance_id = ? and map.question_id = q.id and map.option_id = opt.id";
+			" where map.question_id = q.id and map.option_id = opt.id and ((map.instance_id = ? or map.user_id = (SELECT id FROM user WHERE username = ? LIMIT 1)))";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setInt(1, instanceID);
+			statement.setString(2, username);
 			ResultSet rs = statement.executeQuery();
 			// Should return
 			/*
@@ -710,6 +711,7 @@ public class ICQA extends Controller {
 	/**
 	 * Get a user's home location.
 	 * Use the username as the query parameter, not the user's id.
+	 * !!!!! Gets "user=1" as a parameter!!! 
 	 */
 	public static void getLocation(String user) {
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
@@ -720,7 +722,7 @@ public class ICQA extends Controller {
 			conn = DB.getConnection();
 
 			String query = "SELECT l.coordinates, l.description, s.name FROM location AS l INNER JOIN loc_source AS s "
-					+ "WHERE l.id = (SELECT home_location FROM user WHERE username = ?) AND l.source_id = s.id";
+					+ "WHERE l.id = (SELECT home_location FROM user WHERE and username = ?) AND l.source_id = s.id";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setString(1, user);
 			ResultSet rs = statement.executeQuery();

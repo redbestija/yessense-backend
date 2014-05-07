@@ -14,11 +14,15 @@
 GET		/icqa/options/{option}					ICQA.getOptions
 
 £ Get all questions and options 
-GET 	/icqa/allquestionsandoptions/{json} 			ICQA.getAllQuestionsAndOptions
+# http://yousense.aalto.fi/icqa/allquestionsandoptions/1&2
+GET 	/icqa/allquestionsandoptions/{json}&{username} 			ICQA.getAllQuestionsAndOptions
 
 # Get a list of all the locations
 GET		/icqa/location/all						ICQA.getAllLocations	
 # Get a certain user's home location
+# http://yousense.aalto.fi/icqa/location/1
+# or
+# http://yousense.aalto.fi/icqa/location/user=1 
 GET		/icqa/location/{user}					ICQA.getLocation		
 
 # Get data for admin UI
