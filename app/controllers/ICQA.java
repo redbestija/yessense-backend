@@ -205,9 +205,20 @@ public class ICQA extends Controller {
 		Message format: 
 		{ 
 		"Experiencer":"test", 
-		"Answers": [{1, ["cold", "dry", "bored"]}, ... ] 		// Array of questions and answers: {1, []},
+		"Answers": [{"ID": 1, "Answers":["cold", "dry", "bored"]}, ... ] 		// Array of questions and answers: {1, []},
 		"Location":"2531", 
 		"Overall":"5",  									//???
+		"WholeSentenceInText": "dfhlsdhflsdh",
+		"InstanceID": 1,
+		"IsTesting": true
+		 }
+
+		Value to test: 
+		 { 
+    	"Experiencer":"test",
+		"Answers": [{"ID": 1, "Answers":["now", "yesterday"]}, {"ID": 4, "Answers":["cold", "dry", "motivating"]}, {"ID": 3, "Answers":["reading"]} ], 
+		"Location":"2531", 
+		"Overall":"5",  								
 		"WholeSentenceInText": "dfhlsdhflsdh",
 		"InstanceID": 1,
 		"IsTesting": true
@@ -235,6 +246,8 @@ public class ICQA extends Controller {
 		// feelingIntensityArray
 
 		int adjectiveCategory = 4; // magic number for a category of newly added adjectives
+		int userID = -1; 
+		int locationID = -1;
 
 		Connection conn = null;
 
@@ -247,43 +260,61 @@ public class ICQA extends Controller {
 			ResultSet rs;
 
 			// check if location exists and add if not
-			String query = "SELECT * FROM location WHERE description = ?";
+			String query = "SELECT id FROM location WHERE description = ?";
 			PreparedStatement queryStatement = conn.prepareStatement(query);
 			queryStatement.setString(1, location);
 			rs = queryStatement.executeQuery();
 
 			if (!rs.isBeforeFirst()) {
 				query = "INSERT INTO location (description) VALUES (?)";
-				PreparedStatement insertStatement = conn.prepareStatement(query);
+				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 				insertStatement.setString(1, location);
 				insertStatement.executeUpdate();
+				// Get newly added user ID
+				rs = insertStatement.getGeneratedKeys();
+				if (rs.next())
+					locationID = rs.getInt(1);
+				else
+					throw new SQLException();
+			}
+			else{
+				locationID = rs.getInt(1);
 			}
 
 			// check if user exists and add if not
-			query = "SELECT * FROM user WHERE username = ?";
+			query = "SELECT id FROM user WHERE username = ?";
 			PreparedStatement queryUserStatement = conn.prepareStatement(query);
 			queryUserStatement.setString(1, user);
 			rs = queryUserStatement.executeQuery();
 
 			if (!rs.isBeforeFirst()) {
 				query = "INSERT INTO user (username) VALUES (?)";
-				PreparedStatement insertStatement = conn.prepareStatement(query);
+				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 				insertStatement.setString(1, location);
 				insertStatement.executeUpdate();
+				// Get newly added locatin ID
+				rs = insertStatement.getGeneratedKeys();
+				if (rs.next())
+					userID = rs.getInt(1);
+				else
+					throw new SQLException();
+			}
+			else{
+				userID = rs.getInt(1);
 			}
 
 
 			// insert the actual feedback
 			int insertExperienceId;
 			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, instance_id, is_testing_value) "
-					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, \"not in use\", ?, ?, ?)";
+					+ "VALUES (?, ?, ?, \"not in use\", ?, ?, ?)";
 
 //			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
 //					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?)";
 			PreparedStatement insertExperience = conn.prepareStatement(queryExperience, Statement.RETURN_GENERATED_KEYS);
-			insertExperience.setString(1, user);
+			insertExperience.setInt(1, userID);
 
-			insertExperience.setString(2, location);
+			insertExperience.setInt(2, locationID);
 			insertExperience.setInt(3, overall);
 			// insertExperience.setString(4, when); // Not needed here; when is saved in options table
 
@@ -293,64 +324,72 @@ public class ICQA extends Controller {
 
 			insertExperience.executeUpdate();
 
-			// question id
-			// options[] 
-			// New option ->
-			// username, question 1, instance 1
-			// show this to this user  remember which quesiton, which instance 
+
 			rs = insertExperience.getGeneratedKeys();
 			if (rs.next())
 				insertExperienceId = rs.getInt(1);
 			else
 				throw new SQLException();
 
-			// insert adjectives
-			int insertAdjectiveId[] = new int[feelingArray.size()];
-			for (int i = 0; i < feelingArray.size(); i++) {
-				PreparedStatement insertAdjective = conn.prepareStatement("INSERT INTO fb_adjective (category, value) VALUES (?, ?)",
-						Statement.RETURN_GENERATED_KEYS);
-				insertAdjective.setInt(1, adjectiveCategory);
-				insertAdjective.setString(2, feelingArray.get(i).getAsString());
-				insertAdjective.executeUpdate();
+			// New option ->
+			// username, question 1, instance 1
+			// show this to this user  remember which quesiton, which instance 
 
-				rs = insertAdjective.getGeneratedKeys();
-				if (rs.next())
-					insertAdjectiveId[i] = rs.getInt(1);
-				else
-					throw new SQLException();
-			}
+			// insert adjectives from answers
+			int numberOfQuesitons = answers.size();
+			for (int i = 0; i < numberOfQuesitons; i++){
+				JsonObject qAA = answers.get(i).getAsJsonObject();
+				int qID = qAA.get("ID").getAsInt();
+				JsonArray answersToAdd = qAA.get("Answers").getAsJsonArray();
+				
+				// For each option (answer)
+				for (int j = 0; j < answersToAdd.size(); j++){
+					int adjID = -1; 
+					// Check if this adjective already exists
+					String queryAdjective = "SELECT * FROM options WHERE value = ?";
+					PreparedStatement queryStatementAdjective = conn.prepareStatement(queryAdjective);
+					queryStatementAdjective.setString(1, answersToAdd.get(j).getAsString());
+					rs = queryStatementAdjective.executeQuery();
 
-			// insert feelings
-			for (int i = 0; i < insertAdjectiveId.length; i++) {
-				PreparedStatement insertFeeling = conn.prepareStatement("INSERT INTO fb_feeling (exp_id, adjective, intensity) VALUES (?, ?, ?)");
-				insertFeeling.setInt(1, insertExperienceId);
-				insertFeeling.setInt(2, insertAdjectiveId[i]);
-				insertFeeling.setInt(3, feelingIntensityArray.get(i).getAsInt());
-				insertFeeling.executeUpdate();
-			}
+					if (!rs.isBeforeFirst()) {
+						// No such option (yet)
+						// Insert it
+						queryAdjective = "INSERT INTO options (value) VALUES (?)";
+						PreparedStatement insertStatement = conn.prepareStatement(queryAdjective, Statement.RETURN_GENERATED_KEYS);
+						insertStatement.setString(1, answersToAdd.get(j).getAsString());
+						insertStatement.executeUpdate();
+						// Get newly added user ID
+						rs = insertStatement.getGeneratedKeys();
+						if (rs.next())
+							adjID = rs.getInt(1);
+						else
+							throw new SQLException();
 
-			// insert reasons
-			for (int i = 0; i < reasonArray.size(); i++) {
-				PreparedStatement insertReason = conn.prepareStatement("INSERT INTO fb_reason (exp_id, value) VALUES (?, ?)");
-				insertReason.setInt(1, insertExperienceId);
-				insertReason.setString(2, reasonArray.get(i).getAsString());
-				insertReason.executeUpdate();
-			}
+						// Add new option to Question-Option map so that a user would see his own option
+						queryAdjective = "INSERT INTO instance_question_option_map (question_id, option_id, user_id) VALUES (?,?,?)";
+						// Instance is null
+						insertStatement = conn.prepareStatement(queryAdjective, Statement.RETURN_GENERATED_KEYS);
+						insertStatement.setInt(1, qID);
+						insertStatement.setInt(2, adjID);
+						insertStatement.setInt(3, userID);
+						insertStatement.executeUpdate();
+					}
+					else{
+						adjID = rs.getInt(1);
+					}
+					
+					// Add info to the map
+					String queryAdjMap = "INSERT INTO feedback_option_map (feedback_id, question_id, option_id, instance_id) VALUES (?,?,?,?)";
+					PreparedStatement queryStatementMap = conn.prepareStatement(queryAdjective);
+					queryStatementMap.setInt(1, insertExperienceId);
+					queryStatementMap.setInt(2, qID);
+					queryStatementMap.setInt(3, adjID);
+					queryStatementMap.setInt(4, intstanceID);
+					rs = queryStatementMap.executeQuery();
 
-			// insert activities
-			for (int i = 0; i < activityArray.size(); i++) {
-				PreparedStatement insertActivity = conn.prepareStatement("INSERT INTO fb_activity (exp_id, value) VALUES (?, ?)");
-				insertActivity.setInt(1, insertExperienceId);
-				insertActivity.setString(2, activityArray.get(i).getAsString());
-				insertActivity.executeUpdate();
-			}
 
-			// insert planned actions
-			for (int i = 0; i < followingActionArray.size(); i++) {
-				PreparedStatement insertPlannedAction = conn.prepareStatement("INSERT INTO fb_planned_action (exp_id, value) VALUES (?, ?)");
-				insertPlannedAction.setInt(1, insertExperienceId);
-				insertPlannedAction.setString(2, followingActionArray.get(i).getAsString());
-				insertPlannedAction.executeUpdate();
+				}
+
 			}
 
 			conn.commit();
