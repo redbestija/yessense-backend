@@ -203,26 +203,17 @@ public class ICQA extends Controller {
 
 	/*
 		Message format: 
-		{ 
-		"Experiencer":"test", 
-		"Answers": [{"ID": 1, "Answers":["cold", "dry", "bored"]}, ... ] 		// Array of questions and answers: {1, []},
+		(Value to test)
+		 { 
+    	"Experiencer":"test",
+		"Answers": [{"ID": 1, "Answers":["now", "yesterday"]}, {"ID": 4, "Answers":["cold", "dry", "motivating"]}, {"ID": 3, "Answers":["reading"]} ], 
 		"Location":"2531", 
-		"Overall":"5",  									//???
 		"WholeSentenceInText": "dfhlsdhflsdh",
 		"InstanceID": 1,
 		"IsTesting": 1
 		 }
 
-		Value to test: 
-		 { 
-    	"Experiencer":"test",
-		"Answers": [{"ID": 1, "Answers":["now", "yesterday"]}, {"ID": 4, "Answers":["cold", "dry", "motivating"]}, {"ID": 3, "Answers":["reading"]} ], 
-		"Location":"2531", 
-		"Overall":"5",  								
-		"WholeSentenceInText": "dfhlsdhflsdh",
-		"InstanceID": 1,
-		"IsTesting": 1
-		 }
+		 Overall - removed
 	*/
 	public static void postFeedbackNew(String json) {
 		String time = String.format("%1$TF %1$TT", new Timestamp(new Date().getTime()));
@@ -236,7 +227,7 @@ public class ICQA extends Controller {
 		int isTesting = Integer.parseInt(jsonMessage.get("IsTesting").getAsString());
 
 		String location = jsonMessage.get("Location").getAsString();
-		int overall = Integer.parseInt(jsonMessage.get("Overall").getAsString());
+//		int overall = Integer.parseInt(jsonMessage.get("Overall").getAsString());
 		String wholeMessage = jsonMessage.get("WholeSentenceInText").getAsString();
 
 		JsonArray answers = jsonMessage.get("Answers").getAsJsonArray();
@@ -315,7 +306,7 @@ public class ICQA extends Controller {
 			insertExperience.setInt(1, userID);
 
 			insertExperience.setInt(2, locationID);
-			insertExperience.setInt(3, overall);
+			insertExperience.setInt(3, "-1");
 			// insertExperience.setString(4, when); // Not needed here; when is saved in options table
 
 			insertExperience.setString(4, wholeMessage);

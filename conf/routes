@@ -5,6 +5,7 @@
 # Feedback
 # example: 
 *	/icqa/feedback							ICQA.postFeedbackNew
+#http://yousense.aalto.fi/icqa/feedback?json={%20%22Experiencer%22:%22test%22,%20%22Answers%22:%20[{%22ID%22:%201,%20%22Answers%22:[%22now%22,%20%22yesterday%20at%203pm%22]#},%20{%22ID%22:%204,%20%22Answers%22:[%22cold%22,%20%22dry%22,%20%22motivating%22,%20%22outstanding%22]},%20{%22ID%22:%203,%20%22Answers%22:[%22reading%22]}%20]#,%20%22Location%22:%222531%22,%20%22Overall%22:%225%22,%20%22WholeSentenceInText%22:%20%22dfhlsdhflsdh%22,%20%22InstanceID%22:%201,%20%22IsTesting%22:1}
 
 # Add a new user 
 # example: /icqa/adduser?user=name&location=home
