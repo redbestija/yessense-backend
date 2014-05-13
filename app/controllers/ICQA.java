@@ -79,7 +79,7 @@ public class ICQA extends Controller {
 
 			// insert the actual feedback
 			int insertExperienceId;
-			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, instance_id, is_testing_value) "
+			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, feedback_source, is_testing_value) "
 					+ "VALUES ((SELECT id FROM user WHERE username = ? LIMIT 1), (SELECT id FROM location WHERE description = ? LIMIT 1), ?, ?, ?, ?,0)";
 
 //			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
@@ -306,7 +306,7 @@ public class ICQA extends Controller {
 
 			// insert the actual feedback
 			int insertExperienceId;
-			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, instance_id, is_testing_value) "
+			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time, whole_message, feedback_source, is_testing_value) "
 					+ "VALUES (?, ?, ?, \"not in use\", ?, ?, ?)";
 
 //			String queryExperience = "INSERT INTO feedback (user, location, overall, relative_time) "
