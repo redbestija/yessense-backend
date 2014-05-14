@@ -504,7 +504,7 @@ public class ICQA extends Controller {
 
 		Category getCategoryByName(String catName){
 			for (int i = 0; i < categories.size(); i++){
-				if (categories.get(i).getName() == catName){
+				if (categories.get(i).getName().equals(catName)	){
 					return categories.get(i);
 				}
 			}
@@ -512,7 +512,7 @@ public class ICQA extends Controller {
 			// No categories were found
 			// Create a new one
 			// Add it to the list
-			Category newCategory = new Category(catID, catName);
+			Category newCategory = new Category(catName);
 			addCategory(newCategory);
 			return newCategory;
 
@@ -621,7 +621,7 @@ public class ICQA extends Controller {
 			*/
 			while (rs.next()) {
 	
-				String catName = "";
+				String catName = "Undefined";
 				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"), rs.getString("Prefix"));
 				//if (rs.getString("CategoryID") != null) {
 				//	catID = rs.getInt("CategoryID"); 
