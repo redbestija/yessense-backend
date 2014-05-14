@@ -306,7 +306,7 @@ public class ICQA extends Controller {
 			insertExperience.setInt(1, userID);
 
 			insertExperience.setInt(2, locationID);
-			insertExperience.setInt(3, "-1");
+			insertExperience.setInt(3, -1);
 			// insertExperience.setString(4, when); // Not needed here; when is saved in options table
 
 			insertExperience.setString(4, wholeMessage);
