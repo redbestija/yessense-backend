@@ -494,7 +494,7 @@ public class ICQA extends Controller {
 			prefix = pr; 
 			id = idtobe;
 			categories = new ArrayList<Category>();
-			categories.add(new Category (-1, "Undefined"));
+			categories.add(new Category ("Undefined"));
 		}
 
 		void addCategory(Category cat){
@@ -502,9 +502,9 @@ public class ICQA extends Controller {
 		}
 
 
-		Category getCategoryByID(int catID, String catName){
+		Category getCategoryByName(String catName){
 			for (int i = 0; i < categories.size(); i++){
-				if (categories.get(i).getID() == catID){
+				if (categories.get(i).getName() == catName){
 					return categories.get(i);
 				}
 			}
@@ -528,24 +528,19 @@ public class ICQA extends Controller {
 	}
 	public static class Category{
 		String title;
-		int id;  
 		List<Option> options;
 
 		Category(){
 
 		}
-		Category(int i, String n){
+		Category(String n){
 			title = n;
-			id = i;
 			options = new ArrayList<Option>();
 		}
 
-		void addOption(int optionID, String optionName){
-			Option option = new Option(optionID, optionName);
+		void addOption(String optionName){
+			Option option = new Option(optionName);
 			options.add(option);
-		}
-		public int getID(){
-			return id;
 		}
 
 		public String getName(){
@@ -554,7 +549,6 @@ public class ICQA extends Controller {
 	}
 
 	public static class Option{
-		public int id;
 		int[] intensity;
 		int positiveness;
 		public String title;
@@ -563,13 +557,8 @@ public class ICQA extends Controller {
 
 		}
 
-		Option(int i, String n){
-			id = i; 
+		Option(String n){
 			title = n;
-		}
-
-		int getID(){
-			return id; 
 		}
 
 		String getName(){
@@ -631,7 +620,7 @@ public class ICQA extends Controller {
 			'1', 'When?', '168', 'now', NULL, NULL 
 			*/
 			while (rs.next()) {
-				int catID  = -1;
+	
 				String catName = "";
 				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"), rs.getString("Prefix"));
 				//if (rs.getString("CategoryID") != null) {
@@ -641,8 +630,8 @@ public class ICQA extends Controller {
 					catName = rs.getString("CategoryValue");
 				}
 
-				Category category = question.getCategoryByID(catID, catName);
-				category.addOption(rs.getInt("OptionID"), rs.getString("OptionValue"));
+				Category category = question.getCategoryByName(catName);
+				category.addOption(rs.getString("OptionValue"));
 			}
 		}
 		catch (SQLException e) {
