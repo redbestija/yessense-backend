@@ -251,7 +251,7 @@ public class ICQA extends Controller {
 			ResultSet rs;
 
 			// check if user exists and add if not
-			query = "SELECT id FROM user WHERE username = ?";
+			String query = "SELECT id FROM user WHERE username = ?";
 			PreparedStatement queryUserStatement = conn.prepareStatement(query);
 			queryUserStatement.setString(1, user);
 			rs = queryUserStatement.executeQuery();
@@ -274,7 +274,7 @@ public class ICQA extends Controller {
 
 
 			// check if location exists and add if not
-			String query = "SELECT id FROM location WHERE description = ?";
+			query = "SELECT id FROM location WHERE description = ?";
 			PreparedStatement queryStatement = conn.prepareStatement(query);
 			queryStatement.setString(1, location);
 			rs = queryStatement.executeQuery();
