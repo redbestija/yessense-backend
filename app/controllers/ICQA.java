@@ -621,7 +621,7 @@ public class ICQA extends Controller {
 			*/
 			while (rs.next()) {
 	
-				String catName = "Undefined";
+				String catName = "Own";
 				QuestionAndOption question = getQuestionByID (questionsAndOptions, rs.getInt("QuestionID"), rs.getString("QuestionText"), rs.getString("Prefix"));
 				//if (rs.getString("CategoryID") != null) {
 				//	catID = rs.getInt("CategoryID"); 
