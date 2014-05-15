@@ -494,7 +494,7 @@ public class ICQA extends Controller {
 			prefix = pr; 
 			id = idtobe;
 			categories = new ArrayList<Category>();
-			categories.add(new Category ("Undefined"));
+			categories.add(new Category ("Own"));
 		}
 
 		void addCategory(Category cat){
