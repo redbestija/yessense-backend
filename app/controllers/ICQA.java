@@ -250,28 +250,6 @@ public class ICQA extends Controller {
 
 			ResultSet rs;
 
-			// check if location exists and add if not
-			String query = "SELECT id FROM location WHERE description = ?";
-			PreparedStatement queryStatement = conn.prepareStatement(query);
-			queryStatement.setString(1, location);
-			rs = queryStatement.executeQuery();
-
-			if (!rs.next()) {
-				query = "INSERT INTO location (description) VALUES (?)";
-				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-				insertStatement.setString(1, location);
-				insertStatement.executeUpdate();
-				// Get newly added user ID
-				rs = insertStatement.getGeneratedKeys();
-				if (rs.next())
-					locationID = rs.getInt(1);
-				else
-					throw new SQLException("Cannot insert new location into the DB");
-			}
-			else{
-				locationID = rs.getInt(1);
-			}
-
 			// check if user exists and add if not
 			query = "SELECT id FROM user WHERE username = ?";
 			PreparedStatement queryUserStatement = conn.prepareStatement(query);
@@ -292,6 +270,31 @@ public class ICQA extends Controller {
 			}
 			else{
 				userID = rs.getInt(1);
+			}
+
+
+			// check if location exists and add if not
+			String query = "SELECT id FROM location WHERE description = ?";
+			PreparedStatement queryStatement = conn.prepareStatement(query);
+			queryStatement.setString(1, location);
+			rs = queryStatement.executeQuery();
+
+			if (!rs.next()) {
+				query = "INSERT INTO location (user_id, description, instance_id) VALUES (?,?,?)";
+				PreparedStatement insertStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				insertStatement.setInt(1, userID);
+				insertStatement.setString(2, location);
+				insertStatement.setInt(3, intstanceID);
+				insertStatement.executeUpdate();
+				// Get newly added user ID
+				rs = insertStatement.getGeneratedKeys();
+				if (rs.next())
+					locationID = rs.getInt(1);
+				else
+					throw new SQLException("Cannot insert new location into the DB");
+			}
+			else{
+				locationID = rs.getInt(1);
 			}
 
 
