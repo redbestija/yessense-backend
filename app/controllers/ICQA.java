@@ -610,7 +610,7 @@ public class ICQA extends Controller {
 				"SELECT q.id as QuestionID, q.question_prompt as Prefix, q.question_text as QuestionText, loc.description as OptionValue, loc_type.type as CategoryValue " +
 				"FROM question q, icqa.location loc left join loc_type loc_type on (loc.type_id= loc_type.id) " +
 				"where q.id = 2 and loc.instance_id = ? and ((loc.user_id is null) or loc.user_id = (SELECT id FROM user WHERE username = ? LIMIT 1)) " +
-				"order by questionID, CategoryValue";
+				"order by questionID, CategoryValue, OptionValue";
 			PreparedStatement statement = conn.prepareStatement(query);
 			statement.setInt(1, instanceID);
 			statement.setString(2, username);
