@@ -26,6 +26,119 @@ public class WebUI extends Controller {
 	}
 
 	/**
+	 * A method for getting set of options for given instance (and question)
+	 */
+	public static void getInstanceQuestionOption(String instanceID, String questionID) {
+		Connection conn = null;
+
+		String json = "{\"map\":[";
+
+		try {
+			conn = DB.getConnection();
+			String query = "select map.instance_id instance_id, map.question_id question_id, map.option_id option_id, map.user_id user_id, map.id as id, o.category_id category_id, " + 
+							" c.value category_name,i.name instance_name, q.question_text question_text, o.value option_name " +
+							" from instance_question_option_map map, question q, icqa.option o, instance i, fb_adj_category c " +  
+							" where map.instance_id = i.id and map.question_id = q.id and map.option_id = o.id and o.category_id = c.id "; 
+			query += " and map.instance_id = " + Integer.parseInt(instanceID);
+			if (!questionID.equals("-1")){
+				query += " and map.question_id = " + Integer.parseInt(questionID);
+			}
+			query += " order by instance_id, question_id";
+
+			PreparedStatement statement = conn.prepareStatement(query);
+			ResultSet rs = statement.executeQuery();
+
+			while (rs.next()) {
+				String q_instance_id = rs.getString("instance_id");
+				String q_question_id = rs.getString("question_id");
+				String q_option_id = rs.getString("option_id");
+				String q_user_id = rs.getString("user_id");
+				String q_id = rs.getString("id");
+				String q_instance_name = rs.getString("instance_name");
+				String q_question_text = rs.getString("question_text");
+				String q_option_name = rs.getString("option_name");				
+				String q_category_id = rs.getString("category_id");				
+				String q_categiry_name = rs.getString("category_name");				
+
+				json += "{\"instance_id\":\"" + q_instance_id + "\"," + "\"question_id\":\"" + q_question_id + "\"," + "\"option_id\":\"" + q_option_id + "\","
+						+ "\"user_id\":\"" + q_user_id + "\"," + "\"id\":\"" + q_id + "\"," + "\"instance_name\":\"" + q_instance_name + "\","
+						+ "\"question_text\":\"" + q_question_text + "\"," + "\"option_name\":\"" + q_option_name +  "\"," + "\"category_id\":\"" + q_category_id 
+						+  "\"," + "\"categiry_name\":\"" + q_categiry_name + "\"},";
+			}
+
+		}
+		catch (SQLException e) {
+			renderText("Error: " + e.getMessage());
+		}
+		finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				}
+				catch (SQLException e) {
+					System.out.println(time + " SQL exception while closing database connection");
+				}
+			}
+		}
+
+		// to make the JSON valid, add ]} to the end to close the array
+		json = json.substring(0, json.length() - 1) + "]}";
+		
+		renderJSON(json);
+		//renderJSON("{\"Feedback\":[{\"Experiencer\":\"test\",\"Activity\":[\"Sitting\"],\"EventExperience\":[\"Cold\",\"Dry\",\"Dark\"],\"FollowingAction\":[\"Open window\",\"Sit down\"],\"Location\":\"2531\",\"Reason\":[\"Window is open\"],\"FeelingIntensity\":[\"3\",\"2\",\"1\"],\"Overall\":\"5\",\"RelativeTime\":\"now\"},{\"Experiencer\":\"user\",\"Activity\":[\"Jumping\"],\"EventExperience\":[\"Hot\",\"Humid\"],\"FollowingAction\":[\"Open window\",\"Sit down\"],\"Location\":\"2531\",\"Reason\":[\"Window is closed\"],\"FeelingIntensity\":[\"3\",\"2\"],\"Overall\":\"5\",\"RelativeTime\":\"now\"}]}");
+	}
+
+	/**
+	 * A method for getting set of options for given instance (and question)
+	 */
+	public static void getOptionsByType(String optionType) {
+		Connection conn = null;
+
+		String json = "{\"options\":[";
+
+		try {
+			conn = DB.getConnection();
+
+			String query =  "select o.id option_id, o.value option_name, o.category_id category_id, c.value category_name " +
+							"from icqa.option o, fb_adj_category c " + 
+							"where o.category_id = c.id " + 
+							"order by category_name, option_name ";
+
+			PreparedStatement statement = conn.prepareStatement(query);
+			ResultSet rs = statement.executeQuery();
+
+			while (rs.next()) {
+				String q_option_id = rs.getString("option_id");
+				String q_option_name = rs.getString("option_name");
+				String q_category_id = rs.getString("category_id");
+				String q_category_name = rs.getString("category_name");
+
+				json += "{\"option_id\":\"" + q_option_id + "\"," + "\"option_name\":\"" + q_option_name + "\"," + "\"category_id\":\"" + q_category_id + "\","
+						+ "\"category_name\":\"" + q_category_name "\"},";
+			}
+
+		}
+		catch (SQLException e) {
+			renderText("Error: " + e.getMessage());
+		}
+		finally {
+			if (conn != null) {
+				try {
+					conn.close();
+				}
+				catch (SQLException e) {
+					System.out.println(time + " SQL exception while closing database connection");
+				}
+			}
+		}
+
+		// to make the JSON valid, add ]} to the end to close the array
+		json = json.substring(0, json.length() - 1) + "]}";
+		
+		renderJSON(json);
+		//renderJSON("{\"Feedback\":[{\"Experiencer\":\"test\",\"Activity\":[\"Sitting\"],\"EventExperience\":[\"Cold\",\"Dry\",\"Dark\"],\"FollowingAction\":[\"Open window\",\"Sit down\"],\"Location\":\"2531\",\"Reason\":[\"Window is open\"],\"FeelingIntensity\":[\"3\",\"2\",\"1\"],\"Overall\":\"5\",\"RelativeTime\":\"now\"},{\"Experiencer\":\"user\",\"Activity\":[\"Jumping\"],\"EventExperience\":[\"Hot\",\"Humid\"],\"FollowingAction\":[\"Open window\",\"Sit down\"],\"Location\":\"2531\",\"Reason\":[\"Window is closed\"],\"FeelingIntensity\":[\"3\",\"2\"],\"Overall\":\"5\",\"RelativeTime\":\"now\"}]}");
+	}
+	/**
 	 * A method for getting feedback messages from the database.
 	 * Can use the from & to parameters to filter the messages by timestamp.
 	 */

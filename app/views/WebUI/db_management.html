@@ -1,0 +1,81 @@
+<script type="text/javascript" >
+
+	/**
+	* Gets the feedback from the database.
+	* Note: the parameters don't do anything right now, the database doesn't process them.
+	*/
+	function getFeedback(intstance, question) {
+		var url = "webui/map/" + instance + "&"+ quesiton+"";
+
+		$("#feedback_table tbody tr").remove();
+		json += "{\"instance_id\":\"" + q_instance_id + "\"," + "\"question_id\":\"" + q_question_id + "\"," + "\"option_id\":\"" + q_option_id + "\","
+						+ "\"user_id\":\"" + q_user_id + "\"," + "\"id\":\"" + q_id + "\"," + "\"instance_name\":\"" + q_instance_name + "\","
+						+ "\"question_text\":\"" + q_question_text + "\"," + "\"option_name\":\"" + q_option_name +  "\"," + "\"category_id\":\"" + q_category_id 
+						+  "\"," + "\"categiry_name\":\"" + q_categiry_name + "\"},";
+		$.get(url,
+			function(data) {
+				console.log(data);
+				
+				for (var i = 0; i < data.feedback.length; i++) {
+					$("#feedback_table tbody").append(
+					"<tr>"+
+						"<td>" + data.map[i].instance_id + "</td>" +
+						"<td>" + data.map[i].question_id + "</td>" +
+						"<td>" + data.map[i].option_id + "</td>" +
+						"<td>" + data.map[i].user_id + "</td>" +
+						"<td>" + data.map[i].id + "</td>" +
+						"<td>" + data.map[i].instance_name + "</td>" +
+						"<td>" + data.map[i].question_text + "</td>" +
+						"<td>" + data.map[i].option_name + "</td>" +
+						"<td>" + data.map[i].category_id + "</td>" +
+						"<td>" + data.map[i].categiry_name + "</td>" +
+					"</tr>"
+					);
+				}				
+			});
+	}
+	
+	
+	$(document).ready(function() {
+		getFeedback('1', '4');
+		$("#feedback_table").tablesorter(); // doesn't work right now
+	
+	});
+ 	
+</script>
+
+<h3>Feedback</h3>
+
+<div>
+	Instance:
+	<select id="instance">
+		<option value="">All</option>
+	</select>
+	Question:
+	<select id="question">
+		<option value="">All</option>
+	</select>
+</div>
+
+<table id="instance_question_option_table" class="table table-striped tablesorter">
+	<thead>
+		<tr>
+			<th style="width: 15%">Question</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+			<th style="width: 15%">Option</th>
+		</tr>
+	</thead>
+	<tbody>
+
+	</tbody>
+</table>
